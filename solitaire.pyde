@@ -8,10 +8,9 @@
 # exit and start a new game
 # winning screen
 
-# how cards are displayed first
-
 import os
 import random
+import time
 path = os.getcwd() + '/'
 cardwidth = 70
 cardlength = 100
@@ -57,9 +56,10 @@ class Deck(list):
         random.shuffle(self)
     
 class Game:
-    def __init__(self, spade = True, win = False):
+    def __init__(self, spade = True, win = False, gameon = False):
         self.moves = 0
         self.win = win
+        self.gameon = gameon
         self.spade = spade
         self.deck = Deck(self.spade)
         self.deck.shuffle_cards()
@@ -88,7 +88,20 @@ class Game:
             for n in range(10):
                 addon.append(self.deck.pop())
             self.addons.append(addon)
-            
+    
+    def gamestart(self):
+        fill(255)
+        textSize(60)
+        text('SOLITAIRE', 330, 250)
+        noFill()
+        stroke(200)
+        strokeWeight(2)
+        rect(400, 350, 150, 50)
+        rect(400, 480, 150, 50)
+        textSize(40)
+        text('EASY', 425, 390)
+        text('HARD', 420, 520)    
+                
     def display(self):
         strokeWeight(2)
         stroke(200)
@@ -107,15 +120,15 @@ class Game:
         rect(840, 30, cardwidth, cardlength)
                 
         for pile in self.piles:
-            if not pile[-1].faceup:
-                pile[-1].flip()
-            for card in pile:
-                card.display()
+            if len(pile) != 0:
+                if not pile[len(pile)-1].faceup:
+                    pile[len(pile)-1].flip()
+                for card in pile:
+                    card.display()
     
         for addon in self.addons:
             addon.display()
         
-        #test if the mouse is over the card& highlight the card
         #pile index
         if mouseX >= 30 and mouseX <= 910:
             i = (mouseX-30)//90
@@ -127,20 +140,40 @@ class Game:
             stroke(0, 0, 100)
             strokeWeight(3)
             rect(30+i*(cardwidth+20), 160+n*20, cardwidth, 20*(len(self.piles[i])-n)+80)
-    
             
-    #def clicked(self):
-
-    #def mousePressed(self):
-    #def mouseDragged(self):
-    #def mouseReleased(self):
+    def clicked(self):
+        self.checkexit()
+        self.checkundo()
+        
+    def checkexit(self):
+        if 30 < mouseX < 100 and 30 < mouseY < 60:
+            noFill()
+            stroke(0, 0, 100)
+            strokeWeight(3)
+            rect(30, 30, 70, 30)
+            self.gameon = False
+            self.gamestart()
     
+    def checkundo(self):    
+        if 30 < mouseX < 100 and 100 < mouseY < 130:
+            noFill()
+            stroke(0, 0, 100)
+            strokeWeight(3)
+            rect(30, 100, 70, 30)
+    #    return True
+    
+    def dragged(self):
+        homep = (mouseX-30)//90
+        if mouseY >= 160 and mouseY <= 160 + (len(self.piles[homep])-1)*20 + 100:
+            cardn = (mouseY-160)//20
+            if cardn > len(self.piles[homep])-1:
+                cardn = len(self.piles[homep])-1
+            self.checkMovable(homep, cardn)
+    # chekc after the drag function completes
     
         # identify which pile
         # return home & target
     #    home = piles[x//#width of cards + space between piles]
-        
-        
                 
     #    self.win = self.check_exit()
     #    if not self.win:
@@ -149,7 +182,7 @@ class Game:
     #            self.un_do(card, home, target)
             
 
-    #        checkValidMoves(card)
+    #        checkValid(card)
            
             #check if the first displayed in home is facedown:
                 #faceup
@@ -157,41 +190,35 @@ class Game:
 
     #            self.moves += 1
     
-    #def checkValidMoves(self,card,target):
-        #select cards
-    #    --> # run a for loop from the top card 
-        #check if valid
-    #    for card in 
-    #    sequence=[]
-    #    sequence.append(card.v)
-    #    for i in range(len(sequence)):
-    #        checkvalid = ''.join(sequence[i])
-    #    if checkvalid in '13121110987654321':
+    def checkMovable(self, homep, cardn):
+        home = self.piles[homep]
+        sequence = home[cardn:]
+        for c in sequence:
+            checkline = ''.join(str(int(c.spade)) + str(c.r))
+        if checkline in '113112111110191817161514131211' or checkline in '013012011010090807060504030201':
+            #cards move with mouse
+            for c in sequence:
+                home.remove(c)
+            return True
+        else:
+            return False
+
+    #def checkAcceptable(self, targetp):
+    #    if targetp == []:
     #        return True
-        
+     #   elif 
+    #
         #if empty:
             #accept it
     #    elif:
     #        if card.v+1 == target[len(target)-1].v:
     #            target.append(sequence)
 
-        
-    #def check_exit(self):
-    #    x = mouseX
-    #    y = mouseY
-    #    if # x of exit button < x < buttonx + width and y
-    #    return True
     
-    #def check_undo(self):    
-    #    x = mouseX
-    #    y = mouseY
-    #    if # x of exit button < x < buttonx + width and y
-    #    return True
-    
-    #def un_do(self, home, target):
+    #def undo(self, home, target):
         #draw the sequence back
     
-    #def check_win():
+    #def checkwin():
         #
         
             
@@ -220,26 +247,45 @@ class Pile(list):
     #    if piles_to_update != None:
     #        for pile in piles_to_update:
     #            pile.update_positions()
-             
-g = Game(True,False)    
+                 
+g = Game()
         
 def setup():
     size(940, 800)
     background(0, 255, 0)
 
 def draw():
+    frameRate(15)
     background(0, 100, 0)
     
     #else:
     #    g = Game(False,False)
-    g.display()
+    if not g.gameon:
+        g.gamestart()
+    else:
+        g.display()
     
     
-#def mouseClicked():
-#    if not g.win():
-   # g.clicked()
+def mouseClicked():
+    if not g.gameon:
+        if 400 < mouseX < 550 and 350 < mouseY < 400:
+            g.__init__(spade = True, win = False, gameon = False)
+            g.gameon = True
+            g.display()
+        elif 400 < mouseX < 550 and 480 < mouseY < 530:
+            g.__init__(spade = False, win = False, gameon = False)
+            g.gameon = True
+            g.display()
+    elif g.gameon and not g.win:
+        g.clicked()
+    elif g.win:
+        time.sleep(5)
+        g.gameon = False
+        g.gamestart()
         
-        
+def mouseDragged():
+    if g.gameon and not g.win:
+        g.dragged()
         
         
         
