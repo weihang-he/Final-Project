@@ -25,7 +25,10 @@ class Card:
         self.img = loadImage(path + 'images/back.jpg')
         
     def display(self):
-        image(self.img, 30+(self.p-1)*(cardwidth+20), 160+self.num*20, cardwidth, cardlength)
+        if self.p != 11:
+            image(self.img, 30+(self.p-1)*(cardwidth+20), 160+self.num*20, cardwidth, cardlength)
+        elif self.p == 11:
+            image(self.img, mouseX-cardwidth/2, mouseY-10, cardwidth, cardlength)
     
     def flip(self):
         if not self.faceup:
@@ -63,6 +66,7 @@ class Game:
         self.spade = spade
         self.deck = Deck(self.spade)
         self.deck.shuffle_cards()
+        self.mouselist = []
         
         self.piles = []
         for i in range(1,5):
@@ -125,6 +129,10 @@ class Game:
                     pile[len(pile)-1].flip()
                 for card in pile:
                     card.display()
+        
+        if self.mouselist != []:
+            for c in self.mouselist:
+                c.display()
     
         for addon in self.addons:
             addon.display()
@@ -132,15 +140,17 @@ class Game:
         #pile index
         if mouseX >= 30 and mouseX <= 910:
             i = (mouseX-30)//90
-        #number in pile
         if mouseY >= 160 and mouseY <= 160 + (len(self.piles[i])-1)*20 + 100:
-            n = (mouseY-160)//20
-            if n > len(self.piles[i])-1:
-                n = len(self.piles[i])-1
-            stroke(0, 0, 100)
-            strokeWeight(3)
-            rect(30+i*(cardwidth+20), 160+n*20, cardwidth, 20*(len(self.piles[i])-n)+80)
-            
+            if self.piles[i] == []:
+                stroke(0, 0, 100)
+                strokeWeight(3)
+                rect(30+i*(cardwidth+20), 160, cardwidth, cardlength)
+            else:
+                n = min((mouseY-160)//20, len(self.piles[i])-1)
+                stroke(0, 0, 100)
+                strokeWeight(3)
+                rect(30+i*(cardwidth+20), 160+n*20, cardwidth, 20*(len(self.piles[i])-n)+80)
+                
     def clicked(self):
         self.checkexit()
         self.checkundo()
@@ -162,13 +172,17 @@ class Game:
             rect(30, 100, 70, 30)
     #    return True
     
-    def dragged(self):
+    def pressed(self):
         homep = (mouseX-30)//90
-        if mouseY >= 160 and mouseY <= 160 + (len(self.piles[homep])-1)*20 + 100:
+        if len(self.piles[homep]) != 0 and mouseY >= 160 and mouseY <= 160 + (len(self.piles[homep])-1)*20 + 100:
             cardn = (mouseY-160)//20
             if cardn > len(self.piles[homep])-1:
                 cardn = len(self.piles[homep])-1
             self.checkMovable(homep, cardn)
+               
+                
+                
+                
     # chekc after the drag function completes
     
         # identify which pile
@@ -195,9 +209,11 @@ class Game:
         sequence = home[cardn:]
         for c in sequence:
             checkline = ''.join(str(int(c.spade)) + str(c.r))
-        if checkline in '113112111110191817161514131211' or checkline in '013012011010090807060504030201':
-            #cards move with mouse
+        if checkline in '113112111110191817161514131211' or checkline in '013012011010090807060504030201': 
+            self.mouselist = []
             for c in sequence:
+                c.p = 11
+                self.mouselist.append(c)
                 home.remove(c)
             return True
         else:
@@ -283,9 +299,9 @@ def mouseClicked():
         g.gameon = False
         g.gamestart()
         
-def mouseDragged():
+def mousePressed():
     if g.gameon and not g.win:
-        g.dragged()
+        g.pressed()
         
         
         
