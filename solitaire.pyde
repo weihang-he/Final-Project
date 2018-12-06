@@ -173,12 +173,14 @@ class Game:
     #    return True
     
     def pressed(self):
-        homep = (mouseX-30)//90
-        if len(self.piles[homep]) != 0 and mouseY >= 160 and mouseY <= 160 + (len(self.piles[homep])-1)*20 + 100:
+        p = (mouseX-30)//90
+        home = self.piles[p]
+        if len(home) != 0 and mouseY >= 160 and mouseY <= 160 + (len(home)-1)*20 + 100:
             cardn = (mouseY-160)//20
-            if cardn > len(self.piles[homep])-1:
-                cardn = len(self.piles[homep])-1
-            self.checkMovable(homep, cardn)
+            if cardn > len(home)-1:
+                cardn = len(home)-1
+            if home[cardn].faceup:
+                self.checkMovable(home, cardn)
                
                 
                 
@@ -204,8 +206,7 @@ class Game:
 
     #            self.moves += 1
     
-    def checkMovable(self, homep, cardn):
-        home = self.piles[homep]
+    def checkMovable(self, home, cardn):
         sequence = home[cardn:]
         for c in sequence:
             checkline = ''.join(str(int(c.spade)) + str(c.r))
