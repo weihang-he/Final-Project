@@ -16,19 +16,20 @@ cardwidth = 70
 cardlength = 100
 
 class Card:
-    def __init__(self, p, num, r, spade=True, faceup=False):
-        self.p = p       # which pile this card belongs to
+    def __init__(self, num, r, spade=True, faceup=False, moving=False):
+        self.p = []      # the pile history of the card
         self.num = num   # the order of it in this pile
         self.r = r       # the rank
         self.spade = spade
         self.faceup = faceup
+        self.moving = moving
         self.img = loadImage(path + 'images/back.jpg')
         
     def display(self):
-        if self.p != 11:
-            image(self.img, 30+(self.p-1)*(cardwidth+20), 160+self.num*20, cardwidth, cardlength)
-        elif self.p == 11:
-            image(self.img, mouseX-cardwidth/2, mouseY-10, cardwidth, cardlength)
+        if not self.moving:
+            image(self.img, 30+(self.p[len(self.p)-1]-1)*(cardwidth+20), 160+self.num*20, cardwidth, cardlength)
+        else:
+            image(self.img, mouseX-cardwidth/2, mouseY-10+self.num*20, cardwidth, cardlength)
     
     def flip(self):
         if not self.faceup:
@@ -46,14 +47,14 @@ class Deck(list):
         if self.spade:
             for i in range(8):
                 for r in self.ranks:
-                    self.append(Card(0, 0, r, True, False))
+                    self.append(Card(0, r, True, False))
         else:
             for i in range(4):
                 for r in self.ranks:
-                    self.append(Card(0, 0, r, True, False))
+                    self.append(Card(0, r, True, False))
             for i in range(4):
                 for r in self.ranks:
-                    self.append(Card(0, 0, r, False, False))
+                    self.append(Card(0, r, False, False))
                     
     def shuffle_cards(self):
         random.shuffle(self)
@@ -67,23 +68,26 @@ class Game:
         self.deck = Deck(self.spade)
         self.deck.shuffle_cards()
         self.mouselist = []
+        self.done = 0
         
         self.piles = []
         for i in range(1,5):
             pile = Pile(i)
             for n in range(6):
                 card = self.deck.pop()
-                card.p = i
+                card.p.append(i)
                 card.num = n
                 pile.append(card)
+            pile[5].flip()
             self.piles.append(pile)
         for i in range(5,11):
             pile = Pile(i)
             for n in range(5):
                 card = self.deck.pop()
-                card.p = i
+                card.p.append(i)
                 card.num = n
                 pile.append(card)
+            pile[4].flip()
             self.piles.append(pile)    
 
         self.addons = []
@@ -116,17 +120,21 @@ class Game:
         text('Undo', 31, 126)
         
         for i in range(10):
-            stroke(200)
-            noFill()
-            strokeWeight(2)
-            rect(30+i*(cardwidth+20), 160, cardwidth, cardlength)
-        rect(120, 30, cardwidth, cardlength)
-        rect(840, 30, cardwidth, cardlength)
+            if self.piles[i] == []:
+                stroke(200)
+                noFill()
+                strokeWeight(2)
+                rect(30+i*(cardwidth+20), 160, cardwidth, cardlength)
+        if self.done == 0:
+            rect(120, 30, cardwidth, cardlength)
+        else:
+            doneimg = path + 
+            image(self.img, 30+(self.p[len(self.p)-1]-1)*(cardwidth+20), 160+self.num*20, cardwidth, cardlength)
+        if self.addons == []:
+            rect(840, 30, cardwidth, cardlength)
                 
         for pile in self.piles:
             if len(pile) != 0:
-                if not pile[len(pile)-1].faceup:
-                    pile[len(pile)-1].flip()
                 for card in pile:
                     card.display()
         
@@ -137,10 +145,9 @@ class Game:
         for addon in self.addons:
             addon.display()
         
-        #pile index
-        if mouseX >= 30 and mouseX <= 910:
+        if 30 <= mouseX <= 910:
             i = (mouseX-30)//90
-        if mouseY >= 160 and mouseY <= 160 + (len(self.piles[i])-1)*20 + 100:
+        if 160 <= mouseY <= 160 + (len(self.piles[i])-1)*20 + 100:
             if self.piles[i] == []:
                 stroke(0, 0, 100)
                 strokeWeight(3)
@@ -150,93 +157,151 @@ class Game:
                 stroke(0, 0, 100)
                 strokeWeight(3)
                 rect(30+i*(cardwidth+20), 160+n*20, cardwidth, 20*(len(self.piles[i])-n)+80)
-                
-    def clicked(self):
-        self.checkexit()
-        self.checkundo()
         
-    def checkexit(self):
         if 30 < mouseX < 100 and 30 < mouseY < 60:
             noFill()
-            stroke(0, 0, 100)
             strokeWeight(3)
-            rect(30, 30, 70, 30)
-            self.gameon = False
-            self.gamestart()
-    
-    def checkundo(self):    
+            stroke(0, 0, 100)
+            rect(30, 30, cardwidth, 30)
+                
         if 30 < mouseX < 100 and 100 < mouseY < 130:
             noFill()
             stroke(0, 0, 100)
             strokeWeight(3)
             rect(30, 100, 70, 30)
-    #    return True
+        
+        if 30 < mouseY < 130 and 910-(len(self.addons)-1)*20-cardwidth < mouseX < 910-(len(self.addons)-1)*20:
+            if self.addons != []:
+                noFill()
+                stroke(0, 0, 100)
+                strokeWeight(3)
+                rect(910-(len(self.addons)-1)*20-cardwidth, 30, 70, 100)
+        
+    def clicked(self):
+        self.checkexit()
+        self.checkundo()
+        self.checkaddon()
+        
+    def checkexit(self):
+        if 30 < mouseX < 100 and 30 < mouseY < 60:
+            self.gameon = False
+            self.gamestart()
+    
+    def checkundo(self):    
+        if 30 < mouseX < 100 and 100 < mouseY < 130:
+            pass
+            #undo
+    
+    def checkaddon(self):
+        if self.addons != []:
+            if 30 < mouseY < 130 and 910-(len(self.addons)-1)*20-cardwidth < mouseX < 910-(len(self.addons)-1)*20:
+                addon = self.addons[len(self.addons)-1]
+                i = 0
+                for c in addon:
+                    self.piles[i].append(c)
+                    c.p.append(i+1)
+                    c.num = len(self.piles[i])-1
+                    c.flip()
+                    i += 1
+                self.addons.remove(addon)
     
     def pressed(self):
-        p = (mouseX-30)//90
-        home = self.piles[p]
+        pile = (mouseX-30)//90
+        home = self.piles[pile]
         if len(home) != 0 and mouseY >= 160 and mouseY <= 160 + (len(home)-1)*20 + 100:
             cardn = (mouseY-160)//20
             if cardn > len(home)-1:
                 cardn = len(home)-1
+            sequence = home[cardn:]
             if home[cardn].faceup:
-                self.checkMovable(home, cardn)
-               
-                
-                
-                
-    # chekc after the drag function completes
-    
-        # identify which pile
-        # return home & target
-    #    home = piles[x//#width of cards + space between piles]
-                
-    #    self.win = self.check_exit()
-    #    if not self.win:
-    #        undo = self.check_undo()
-    #        if undo:
-    #            self.un_do(card, home, target)
-            
-
-    #        checkValid(card)
-           
-            #check if the first displayed in home is facedown:
-                #faceup
-        
-
-    #            self.moves += 1
-    
-    def checkMovable(self, home, cardn):
-        sequence = home[cardn:]
-        for c in sequence:
-            checkline = ''.join(str(int(c.spade)) + str(c.r))
-        if checkline in '113112111110191817161514131211' or checkline in '013012011010090807060504030201': 
+                if self.checkMovable(sequence):
+                    self.mouselist = []
+                    cnt = 0
+                    for c in sequence:
+                        c.moving = True
+                        self.mouselist.append(c)
+                        c.num = cnt
+                        home.remove(c)
+                        cnt += 1
+                            
+    def released(self):
+        if self.mouselist != []:
+            pile = (mouseX-30)//90
+            target = self.piles[pile]
+            home = self.piles[self.mouselist[0].p[len(self.mouselist[0].p)-1]-1]
+            if mouseY >= 160 + (len(target)-1)*20 and mouseY <= 160 + (len(target)-1)*20 + 100:
+                if self.checkAcceptable(pile, target):
+                    if home != []:
+                        home[len(home)-1].flip()
+                    for c in self.mouselist:
+                        target.append(c)
+                    for n in range(len(target)):
+                        target[n].num = n
+                        target[n].moving = False
+                    for pi in range(1, 11):
+                        for c in self.piles[pi-1]:
+                            c.p.append(pi)
+                    possiblewin = []
+                    for c in target:
+                        if c.faceup:
+                            possiblewin.append(c)
+                    if len(possiblewin) >= 13: 
+                        pw =  possiblewin[-1:-14:-1]    
+                        self.win = self.checkwin(target, pw)
+                else:
+                    for c in self.mouselist:
+                        home.append(c)
+                        c.moving = False
+                        c.num = len(home)-1
+            else:
+                 for c in self.mouselist:
+                    home.append(c)
+                    c.moving = False
+                    c.num = len(home)-1   
             self.mouselist = []
-            for c in sequence:
-                c.p = 11
-                self.mouselist.append(c)
-                home.remove(c)
-            return True
+    
+    def checkMovable(self, sequence):
+        checkline = ''
+        checkspade = 0
+        for c in sequence:
+            checkline += (str(c.r))
+            checkline += '.'
+            checkspade += int(c.spade)
+        if checkline in '13.12.11.10.9.8.7.6.5.4.3.2.1.':
+            if checkspade == 0 or checkspade == len(sequence): 
+                return True
+            else:
+                return False
         else:
             return False
 
-    #def checkAcceptable(self, targetp):
-    #    if targetp == []:
-    #        return True
-     #   elif 
-    #
-        #if empty:
-            #accept it
-    #    elif:
-    #        if card.v+1 == target[len(target)-1].v:
-    #            target.append(sequence)
-
+    def checkAcceptable(self, p, target):
+        if target == []:
+            return True        
+        else:
+            if target[len(target)-1].r - 1 == self.mouselist[0].r:
+                return True
+            else:
+                return False
     
-    #def undo(self, home, target):
-        #draw the sequence back
-    
-    #def checkwin():
-        #
+    def checkwin(self, target, pw):
+        checkline = ''
+        checkspade = 0
+        for c in pw:
+            checkline += (str(c.r))
+            checkline += '.'
+            checkspade += int(c.spade)
+        if checkline == '1.2.3.4.5.6.7.8.9.10.11.12.13.':
+            if checkspade == 0 or checkspade == 13: 
+                target.remove(pw)
+                
+                return True
+            else:
+                return False
+        else:
+            return False
+        
+        
         
             
 class Addon(list):
@@ -256,15 +321,7 @@ class Addon(list):
 class Pile(list):
     def __init__(self, order):
         self.order = order
-
-    #def update(self, piles_to_update):
-    #    for pile in self.piles:
-    #        pile.update()
-
-    #    if piles_to_update != None:
-    #        for pile in piles_to_update:
-    #            pile.update_positions()
-                 
+            
 g = Game()
         
 def setup():
@@ -303,7 +360,7 @@ def mouseClicked():
 def mousePressed():
     if g.gameon and not g.win:
         g.pressed()
-        
-        
-        
-        
+
+def mouseReleased():
+    if g.gameon and not g.win:
+        g.released()
