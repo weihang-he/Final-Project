@@ -22,6 +22,7 @@ class Card:
         self.r = r       # the rank
         self.spade = spade
         self.faceup = faceup
+        self.fuh = []    # keep track of face up history
         self.moving = moving
         self.img = loadImage(path + 'images/back.jpg')
         
@@ -35,6 +36,13 @@ class Card:
         if not self.faceup:
             self.img = loadImage(path + 'images/' + str(int(self.spade)) + str(self.r) + '.png')
             self.faceup = True
+        else:
+            if self.fuh[len(self.fuh)-1] == 0:
+                self.img = loadImage(path + 'images/' + str(int(self.spade)) + str(self.r) + '.png')
+            else:
+                self.img = loadImage(path + 'images/back.jpg')
+
+            
                
 class Deck(list):
     def __init__(self, spade=True):
@@ -68,7 +76,9 @@ class Game:
         self.deck = Deck(self.spade)
         self.deck.shuffle_cards()
         self.mouselist = []
-        self.done = 0
+        self.done = []
+        self.doneimg1 = loadImage(path + 'images/11.png')
+        self.doneimg2 = loadImage(path + 'images/01.png')
         
         self.piles = []
         for i in range(1,5):
@@ -76,8 +86,10 @@ class Game:
             for n in range(6):
                 card = self.deck.pop()
                 card.p.append(i)
+                card.fuh.append(int(card.faceup))
                 card.num = n
                 pile.append(card)
+            pile[5].fuh[0] = 1
             pile[5].flip()
             self.piles.append(pile)
         for i in range(5,11):
@@ -85,8 +97,10 @@ class Game:
             for n in range(5):
                 card = self.deck.pop()
                 card.p.append(i)
+                card.fuh.append(int(card.faceup))
                 card.num = n
                 pile.append(card)
+            pile[4].fuh[0] = 1
             pile[4].flip()
             self.piles.append(pile)    
 
@@ -118,6 +132,9 @@ class Game:
         text('Menu', 31, 56)
         rect(30, 100, cardwidth, 30)
         text('Undo', 31, 126)
+        textSize(35)
+        text(self.moves, 660, 93)
+        rect(630, 60, 100, 40)
         
         for i in range(10):
             if self.piles[i] == []:
@@ -125,11 +142,13 @@ class Game:
                 noFill()
                 strokeWeight(2)
                 rect(30+i*(cardwidth+20), 160, cardwidth, cardlength)
-        if self.done == 0:
+        if self.done == []:
             rect(120, 30, cardwidth, cardlength)
         else:
-            doneimg = path + 
-            image(self.img, 30+(self.p[len(self.p)-1]-1)*(cardwidth+20), 160+self.num*20, cardwidth, cardlength)
+            cnt = 0
+            for i in self.done:
+                image(i, 120+cnt*20, 30, cardwidth, cardlength)
+                cnt += 1
         if self.addons == []:
             rect(840, 30, cardwidth, cardlength)
                 
@@ -145,8 +164,11 @@ class Game:
         for addon in self.addons:
             addon.display()
         
-        if 30 <= mouseX <= 910:
-            i = (mouseX-30)//90
+        i = (mouseX-30)//90
+        if i == 10:
+            i = 9
+        elif i == -1:
+            i = 0
         if 160 <= mouseY <= 160 + (len(self.piles[i])-1)*20 + 100:
             if self.piles[i] == []:
                 stroke(0, 0, 100)
@@ -189,8 +211,33 @@ class Game:
     
     def checkundo(self):    
         if 30 < mouseX < 100 and 100 < mouseY < 130:
-            pass
-            #undo
+            for pi in self.piles:
+                for c in pi:
+                    if len(c.p) == 1:
+                        # voice
+                        return
+            self.moves += 1
+            for pi in self.piles:
+                updatelist = []
+                for c in pi:
+                    if c.p[len(c.p)-1] != c.p[len(c.p)-2]:
+                        updatelist.append(c)
+                if updatelist != []:
+                    for c in updatelist:
+                        target = c.p[len(c.p)-1]
+                        home = c.p[len(c.p)-2]
+                        self.piles[target-1].remove(c)
+                        self.piles[home-1].append(c)
+                    #self.piles[home-1][len(self.piles[home-1])-len(updatelist)-1].flip()
+                    break
+                
+            for pi in self.piles:
+                cnt = 0
+                for c in pi:
+                    c.p.pop()
+                    c.num = cnt
+                    cnt += 1
+                    c.fuh.pop()
     
     def checkaddon(self):
         if self.addons != []:
@@ -201,12 +248,17 @@ class Game:
                     self.piles[i].append(c)
                     c.p.append(i+1)
                     c.num = len(self.piles[i])-1
+                    c.fuh.append(1)
                     c.flip()
                     i += 1
                 self.addons.remove(addon)
     
     def pressed(self):
         pile = (mouseX-30)//90
+        if pile == 10:
+            pile = 9
+        elif pile == -1:
+            pile = 0
         home = self.piles[pile]
         if len(home) != 0 and mouseY >= 160 and mouseY <= 160 + (len(home)-1)*20 + 100:
             cardn = (mouseY-160)//20
@@ -227,11 +279,16 @@ class Game:
     def released(self):
         if self.mouselist != []:
             pile = (mouseX-30)//90
+            if pile == 10:
+                pile = 9
+            elif pile == -1:
+                pile = 0
             target = self.piles[pile]
             home = self.piles[self.mouselist[0].p[len(self.mouselist[0].p)-1]-1]
             if mouseY >= 160 + (len(target)-1)*20 and mouseY <= 160 + (len(target)-1)*20 + 100:
                 if self.checkAcceptable(pile, target):
-                    if home != []:
+                    self.moves += 1
+                    if home != [] and not home[len(home)-1].faceup:
                         home[len(home)-1].flip()
                     for c in self.mouselist:
                         target.append(c)
@@ -241,6 +298,7 @@ class Game:
                     for pi in range(1, 11):
                         for c in self.piles[pi-1]:
                             c.p.append(pi)
+                            c.fuh.append(int(c.faceup))
                     possiblewin = []
                     for c in target:
                         if c.faceup:
@@ -293,17 +351,21 @@ class Game:
             checkspade += int(c.spade)
         if checkline == '1.2.3.4.5.6.7.8.9.10.11.12.13.':
             if checkspade == 0 or checkspade == 13: 
-                target.remove(pw)
-                
-                return True
+                for c in pw:
+                    target.remove(c)
+                if target != [] and not target[len(target)-1].faceup:
+                    target[len(target)-1].flip()
+                if checkspade == 0:
+                    self.done.append(self.doneimg2)
+                else:
+                    self.done.append(self.doneimg1)
+                if len(self.done) == 8:
+                    return True
             else:
                 return False
         else:
             return False
-        
-        
-        
-            
+                
 class Addon(list):
     def __init__(self, order):
         self.order = order
