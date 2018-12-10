@@ -149,6 +149,10 @@ class Game:
             for i in self.done:
                 image(i, 120+cnt*20, 30, cardwidth, cardlength)
                 cnt += 1
+            if cnt == 8:
+                textSize(50)
+                text('CONGRATULATIONS!\n       YOU WON!', 250, 350)
+
         if self.addons == []:
             rect(840, 30, cardwidth, cardlength)
                 
@@ -252,6 +256,7 @@ class Game:
                     c.flip()
                     i += 1
                 self.addons.remove(addon)
+                self.moves += 1
     
     def pressed(self):
         pile = (mouseX-30)//90
@@ -360,6 +365,9 @@ class Game:
                 else:
                     self.done.append(self.doneimg1)
                 if len(self.done) == 8:
+                    self.display()
+                    #textSize(80)
+                    #text('CONGRATULATIONS!', 425, 300)
                     return True
             else:
                 return False
@@ -378,7 +386,6 @@ class Addon(list):
     def clicked(self, order):
         for i in range(10):
             g.piles[i+1].append(self[i])
-        
     
 class Pile(list):
     def __init__(self, order):
@@ -400,7 +407,6 @@ def draw():
         g.gamestart()
     else:
         g.display()
-    
     
 def mouseClicked():
     if not g.gameon:
