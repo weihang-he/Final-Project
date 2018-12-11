@@ -1,10 +1,6 @@
-# move freely
-# time steps
-# drag and drop (wrong position go back)
 # sound effect
 # add creepy voices asking 'wanna continue? 100 moves already'
 
-# undo
 # exit and start a new game
 # winning screen
 
@@ -36,13 +32,11 @@ class Card:
         if not self.faceup:
             self.img = loadImage(path + 'images/' + str(int(self.spade)) + str(self.r) + '.png')
             self.faceup = True
-        else:
-            if self.fuh[len(self.fuh)-1] == 0:
-                self.img = loadImage(path + 'images/' + str(int(self.spade)) + str(self.r) + '.png')
-            else:
-                self.img = loadImage(path + 'images/back.jpg')
-
-            
+    
+    def cover(self):
+        if self.faceup:
+            self.img = loadImage(path + 'images/back.jpg')
+            self.faceup = False  
                
 class Deck(list):
     def __init__(self, spade=True):
@@ -89,8 +83,8 @@ class Game:
                 card.fuh.append(int(card.faceup))
                 card.num = n
                 pile.append(card)
-            pile[5].fuh[0] = 1
             pile[5].flip()
+            pile[5].fuh[0] = 1
             self.piles.append(pile)
         for i in range(5,11):
             pile = Pile(i)
@@ -100,8 +94,8 @@ class Game:
                 card.fuh.append(int(card.faceup))
                 card.num = n
                 pile.append(card)
-            pile[4].fuh[0] = 1
             pile[4].flip()
+            pile[4].fuh[0] = 1
             self.piles.append(pile)    
 
         self.addons = []
@@ -145,6 +139,7 @@ class Game:
                 noFill()
                 strokeWeight(2)
                 rect(30+i*(cardwidth+20), 160, cardwidth, cardlength)
+        
         if self.done == []:
             rect(120, 30, cardwidth, cardlength)
         else:
@@ -152,10 +147,6 @@ class Game:
             for i in self.done:
                 image(i, 120+cnt*20, 30, cardwidth, cardlength)
                 cnt += 1
-            if cnt == 8:
-                textSize(50)
-                text('CONGRATULATIONS!\n       YOU WON!', 250, 350)
-                #image
 
         if self.addons == []:
             rect(840, 30, cardwidth, cardlength)
@@ -243,7 +234,6 @@ class Game:
                         home = c.p[len(c.p)-2]
                         self.piles[target-1].remove(c)
                         self.piles[home-1].append(c)
-                    #self.piles[home-1][len(self.piles[home-1])-len(updatelist)-1].flip()
                     break
                 
             for pi in self.piles:
@@ -253,6 +243,8 @@ class Game:
                     c.num = cnt
                     cnt += 1
                     c.fuh.pop()
+                    if c.fuh[len(c.fuh)-1] == 0:
+                        c.cover()
     
     def checkaddon(self):
         if self.addons != []:
@@ -267,7 +259,6 @@ class Game:
                     c.flip()
                     i += 1
                 self.addons.remove(addon)
-    
                 
     def checkhint(self):
         if 500 < mouseX < 600 and 60 < mouseY < 100:
@@ -461,10 +452,11 @@ def draw():
     frameRate(15)
     background(0, 100, 0)
     
-    #else:
-    #    g = Game(False,False)
-    if not g.gameon:
-        g.gamestart()
+    if g.win:
+        textSize(80)
+        text('CONGRATULATIONS!', 425, 300)
+    elif not g.gameon:
+        g.gamestart()        
     else:
         g.display()
     
