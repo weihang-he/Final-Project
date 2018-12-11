@@ -152,6 +152,10 @@ class Game:
             for i in self.done:
                 image(i, 120+cnt*20, 30, cardwidth, cardlength)
                 cnt += 1
+            if cnt == 8:
+                textSize(50)
+                text('CONGRATULATIONS!\n       YOU WON!', 250, 350)
+                #image
 
         if self.addons == []:
             rect(840, 30, cardwidth, cardlength)
@@ -269,7 +273,6 @@ class Game:
         if 500 < mouseX < 600 and 60 < mouseY < 100:
             #the first priority is to check the empty
             hintlist =[] #for empyty pile
-            hintsequence = [] #for unempty pile
             for i in range(10):    
                 if self.piles[i] == []:
                     hintlist.append(i)
@@ -280,36 +283,34 @@ class Game:
                 noFill()
                 strokeWeight(3)
                 rect(30+h*(cardwidth+20), 160, cardwidth, cardlength)
-            # find the continuous sequence
+            # find the card bigger 
             # randomly generate
-                #elif:
-                    #if faceup
-                    #for pi in self.piles:
-                  #  checkline = ''
-                   # checkspade = 0
-                   # n = len(self.piles)
-                   # for c in self.piles[i][::-1]:
-                      #  checkline += (str(c.r))
-            #          #  checkline += '.'
-                      #  checkspade += str(c.spade)
-                        #if checkline in '1.2.3.4.5.6.7.8.9.10.11.12.13':
-                           # if checkspade in '0'*n or checkspade in '1'*n: 
-                              #  hintsequence.append(c) #increasing order: [1,2,3, ...]
-                                #then the mathing one has to be in hintsequence[1:] or the one above it --> self.piles[i][::-1]+len(hintsequence)
-                                #the matching one to be in pile j
-                                
-                                #the mathcing tile: self.pile[j][-1]
-                                #the bottom of the hpile: self.pile[i][-1]
-                                #index of tile from below: int(self.pile[j][-1])-int(self.pile[i][-1])
-            #                    #index of tile from above: len(self.pile[i])-int(self.pile[j][-1])+int(self.pile[i][-1])
-                                #the Y-pos: 160+20*(len(self.pile[i])-int(self.pile[j][-1])+int(self.pile[i][-1]-1)
-                             #   frameRate(3)
-                              #  stroke(200,0,0)
-                             #   noFill()
-                             #   strokeWeight(3)
-                             #   rect(30+i*(cardwidth+20), 160+20*(len(self.pile[i])-int(self.pile[j][-1])+int(self.pile[i][-1]-1, cardwidth, cardlength)
-                             #   rect(30+j*(cardwidth+20), 160+20*(len(self.piles[j])-1), cardwidth, cardlength)
-                             #   break
+            elif hintlist == []:
+                for j in range(10):
+                    fpsequence = [] # for the faceup list for every pile
+                    for c in self.piles[j]:
+                       if c.faceup == True:
+                           fpsequence.append(c)
+                    checkline = ''
+                    checkspade = 0
+                    hintsequence = [] #for unempty pile
+                    for c in fpsequence[::-1]:
+                        hintsequence.append(fpsequence[-1])
+                        if c.spade == fpsequence[len(fpsequence)-1].spade and c.r == fpsequence[len(fpsequence)-1].r+1:
+                            hintsequence.append(c)
+                            # return hintsequence[-1].r+1
+                    #check other piles last
+                    for i in range(10):
+                        if self.piles[i][len(self.piles[i])-1].spade == hintsequence[len(hintsequence)-1].spade and self.piles[i][len(self.piles[i])-1].r == hintsequence[len(hintsequence)-1].r+1:
+                            frameRate(3)
+                            stroke(200,0,0)
+                            noFill()
+                            strokeWeight(3)
+                            #hintsequence
+                            rect(30+j*(cardwidth+20), 160+20*(len(self.piles[j])-1), cardwidth, cardlength)
+                            rect(30+i*(cardwidth+20), 160+20*(len(self.piles[i])-1), cardwidth, cardlength)
+                            break
+                    break
             else: 
                 #addon 
                 if self.addons != []:
@@ -427,8 +428,6 @@ class Game:
                     self.done.append(self.doneimg1)
                 if len(self.done) == 8:
                     self.display()
-                    #textSize(80)
-                    #text('CONGRATULATIONS!', 425, 300)
                     return True
             else:
                 return False
@@ -482,9 +481,6 @@ def mouseClicked():
     elif g.gameon and not g.win:
         g.clicked()
     elif g.win:
-        textSize(50)
-        text('CONGRATULATIONS!\n       YOU WON!', 250, 350)
-        #image
         time.sleep(5)
         g.gameon = False
         g.gamestart()
