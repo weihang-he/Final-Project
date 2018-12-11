@@ -135,6 +135,9 @@ class Game:
         textSize(35)
         text(self.moves, 660, 93)
         rect(630, 60, 100, 40)
+        textSize(35)
+        text('Hint', 510, 93)
+        rect(500, 60, 100, 40)
         
         for i in range(10):
             if self.piles[i] == []:
@@ -149,9 +152,6 @@ class Game:
             for i in self.done:
                 image(i, 120+cnt*20, 30, cardwidth, cardlength)
                 cnt += 1
-            if cnt == 8:
-                textSize(50)
-                text('CONGRATULATIONS!\n       YOU WON!', 250, 350)
 
         if self.addons == []:
             rect(840, 30, cardwidth, cardlength)
@@ -203,10 +203,17 @@ class Game:
                 strokeWeight(3)
                 rect(910-(len(self.addons)-1)*20-cardwidth, 30, 70, 100)
         
+        if 500 < mouseX < 600 and 60 < mouseY < 100:
+            noFill()
+            strokeWeight(3)
+            stroke(0, 0, 100)
+            rect(500, 60, 100, 40)
+            
     def clicked(self):
         self.checkexit()
         self.checkundo()
         self.checkaddon()
+        self.checkhint()
         
     def checkexit(self):
         if 30 < mouseX < 100 and 30 < mouseY < 60:
@@ -256,7 +263,61 @@ class Game:
                     c.flip()
                     i += 1
                 self.addons.remove(addon)
-                self.moves += 1
+    
+                
+    def checkhint(self):
+        if 500 < mouseX < 600 and 60 < mouseY < 100:
+            #the first priority is to check the empty
+            hintlist =[] #for empyty pile
+            hintsequence = [] #for unempty pile
+            for i in range(10):    
+                if self.piles[i] == []:
+                    hintlist.append(i)
+            if hintlist != []:
+                h = random.choice(hintlist)
+                frameRate(3)
+                stroke(200,0,0)
+                noFill()
+                strokeWeight(3)
+                rect(30+h*(cardwidth+20), 160, cardwidth, cardlength)
+            # find the continuous sequence
+            # randomly generate
+                #elif:
+                    #if faceup
+                    #for pi in self.piles:
+                  #  checkline = ''
+                   # checkspade = 0
+                   # n = len(self.piles)
+                   # for c in self.piles[i][::-1]:
+                      #  checkline += (str(c.r))
+            #          #  checkline += '.'
+                      #  checkspade += str(c.spade)
+                        #if checkline in '1.2.3.4.5.6.7.8.9.10.11.12.13':
+                           # if checkspade in '0'*n or checkspade in '1'*n: 
+                              #  hintsequence.append(c) #increasing order: [1,2,3, ...]
+                                #then the mathing one has to be in hintsequence[1:] or the one above it --> self.piles[i][::-1]+len(hintsequence)
+                                #the matching one to be in pile j
+                                
+                                #the mathcing tile: self.pile[j][-1]
+                                #the bottom of the hpile: self.pile[i][-1]
+                                #index of tile from below: int(self.pile[j][-1])-int(self.pile[i][-1])
+            #                    #index of tile from above: len(self.pile[i])-int(self.pile[j][-1])+int(self.pile[i][-1])
+                                #the Y-pos: 160+20*(len(self.pile[i])-int(self.pile[j][-1])+int(self.pile[i][-1]-1)
+                             #   frameRate(3)
+                              #  stroke(200,0,0)
+                             #   noFill()
+                             #   strokeWeight(3)
+                             #   rect(30+i*(cardwidth+20), 160+20*(len(self.pile[i])-int(self.pile[j][-1])+int(self.pile[i][-1]-1, cardwidth, cardlength)
+                             #   rect(30+j*(cardwidth+20), 160+20*(len(self.piles[j])-1), cardwidth, cardlength)
+                             #   break
+            else: 
+                #addon 
+                if self.addons != []:
+                    frameRate(3)
+                    stroke(200,0,0)
+                    noFill()
+                    strokeWeight(3)
+                    rect(910-(len(self.addons)-1)*20-cardwidth, 30, cardwidth, cardlength) 
     
     def pressed(self):
         pile = (mouseX-30)//90
@@ -280,7 +341,7 @@ class Game:
                         c.num = cnt
                         home.remove(c)
                         cnt += 1
-                            
+        
     def released(self):
         if self.mouselist != []:
             pile = (mouseX-30)//90
@@ -345,8 +406,8 @@ class Game:
             if target[len(target)-1].r - 1 == self.mouselist[0].r:
                 return True
             else:
-                return False
-    
+                return False        
+                
     def checkwin(self, target, pw):
         checkline = ''
         checkspade = 0
@@ -421,6 +482,9 @@ def mouseClicked():
     elif g.gameon and not g.win:
         g.clicked()
     elif g.win:
+        textSize(50)
+        text('CONGRATULATIONS!\n       YOU WON!', 250, 350)
+        #image
         time.sleep(5)
         g.gameon = False
         g.gamestart()
