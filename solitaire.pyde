@@ -285,26 +285,31 @@ class Game:
                     checkline = ''
                     checkspade = 0
                     hintsequence = [] #for unempty pile
-                    for c in fpsequence[::-1]:
-                        hintsequence.append(fpsequence[-1])
-                        if c.spade == fpsequence[len(fpsequence)-1].spade and c.r == fpsequence[len(fpsequence)-1].r+1:
+                    hintsequence.append(fpsequence[len(fpsequence)-1])
+                    for c in fpsequence[len(fpsequence)-2::-1]:
+                        if c.spade == fpsequence[len(fpsequence)-1].spade and c.r == hintsequence[len(hintsequence)-1].r+1:
                             hintsequence.append(c)
+                        else:
+                            break
                             # return hintsequence[-1].r+1
                     #check other piles last
                     for i in range(10):
+                        b = False
                         if self.piles[i][len(self.piles[i])-1].spade == hintsequence[len(hintsequence)-1].spade and self.piles[i][len(self.piles[i])-1].r == hintsequence[len(hintsequence)-1].r+1:
                             frameRate(3)
                             stroke(200,0,0)
                             noFill()
                             strokeWeight(3)
                             #hintsequence
-                            rect(30+j*(cardwidth+20), 160+20*(len(self.piles[j])-1), cardwidth, cardlength)
+                            rect(30+j*(cardwidth+20), 160+20*(len(self.piles[j])-len(hintsequence)), cardwidth, 20*(len(hintsequence)-1)+100)
+                            stroke(50,0,0)
                             rect(30+i*(cardwidth+20), 160+20*(len(self.piles[i])-1), cardwidth, cardlength)
+                            b = True
                             break
-                    break
-            else: 
+                    if b:
+                        break
                 #addon 
-                if self.addons != []:
+                if not b and self.addons != []:
                     frameRate(3)
                     stroke(200,0,0)
                     noFill()
@@ -395,7 +400,7 @@ class Game:
         if target == []:
             return True        
         else:
-            if target[len(target)-1].r - 1 == self.mouselist[0].r:
+            if target[len(target)-1].faceup and target[len(target)-1].r - 1 == self.mouselist[0].r:
                 return True
             else:
                 return False        
@@ -417,8 +422,10 @@ class Game:
                     self.done.append(self.doneimg2)
                 else:
                     self.done.append(self.doneimg1)
+                for pi in self.piles:
+                    for c in pi:
+                        c.fuh.append(int(c.faceup))
                 if len(self.done) == 8:
-                    self.display()
                     return True
             else:
                 return False
@@ -453,8 +460,8 @@ def draw():
     background(0, 100, 0)
     
     if g.win:
-        textSize(80)
-        text('CONGRATULATIONS!', 425, 300)
+        textSize(50)
+        text('CONGRATULATIONS!', 250, 300)
     elif not g.gameon:
         g.gamestart()        
     else:
