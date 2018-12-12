@@ -422,9 +422,10 @@ class Game:
                     self.done.append(self.doneimg2)
                 else:
                     self.done.append(self.doneimg1)
-                for pi in self.piles:
-                    for c in pi:
+                for pi in range(10):
+                    for c in self.piles[pi]:
                         c.fuh.append(int(c.faceup))
+                        c.p = [pi+1]
                 if len(self.done) == 8:
                     return True
             else:
