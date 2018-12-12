@@ -482,6 +482,7 @@ def mouseClicked():
         g.clicked()
     elif g.win:
         time.sleep(5)
+        g.win = False
         g.gameon = False
         g.gamestart()
         
