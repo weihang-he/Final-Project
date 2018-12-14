@@ -1,3 +1,4 @@
+#add_library('minim')
 # sound effect
 # add creepy voices asking 'wanna continue? 100 moves already'
 
@@ -8,6 +9,7 @@ import os
 import random
 import time
 path = os.getcwd() + '/'
+#player = Minim(this)
 cardwidth = 70
 cardlength = 100
 
@@ -73,6 +75,8 @@ class Game:
         self.done = []
         self.doneimg1 = loadImage(path + 'images/11.png')
         self.doneimg2 = loadImage(path + 'images/01.png')
+        self.bgimg = loadImage(path + 'images/bg.jpeg')
+        #self.easywelcome = player.loadFile(path + 'sounds/easywelcome.mp3')
         
         self.piles = []
         for i in range(1,5):
@@ -124,8 +128,6 @@ class Game:
         file2 = open(path + 'scoreboard/2.csv', 'r')
         record1 = file1.read().split(',')
         record2 = file2.read().split(',')
-        print record1
-        print record2
         r1 = 1000
         for n in range (1, len(record1)):
             if int(record1[n]) < r1:
@@ -153,6 +155,10 @@ class Game:
         textSize(35)
         text('Hint', 510, 93)
         rect(500, 60, 100, 40)
+        
+        #if self.spade:
+        #    self.easywelcome.rewind()
+        #    self.easywelcome.play()
         
         for i in range(10):
             if self.piles[i] == []:
@@ -485,7 +491,7 @@ def setup():
 
 def draw():
     frameRate(15)
-    background(0, 100, 0)
+    image(g.bgimg, 0, 0)
     
     if g.win:
         textSize(50)
