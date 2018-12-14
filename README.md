@@ -23,4 +23,10 @@ The game is written in Python and can be run with Processing. We have incorporat
 To make the game more personal, we specifically record voices and use as sound effect.
 
 
+Note:
+Due to naming error, the Final-Project.pyde does not contain the actual code. 
+
+Please run the Solitaire.pyde instead.
+
+
 
