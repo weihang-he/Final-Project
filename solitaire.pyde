@@ -112,12 +112,33 @@ class Game:
         noFill()
         stroke(200)
         strokeWeight(2)
-        rect(400, 350, 150, 50)
-        rect(400, 480, 150, 50)
+        rect(300, 350, 150, 50)
+        rect(300, 480, 150, 50)
         textSize(40)
-        text('EASY', 425, 390)
-        text('HARD', 420, 520)    
-                
+        text('EASY', 325, 390)
+        text('HARD', 320, 520) 
+        textSize(30)
+        text('Record: ', 470, 390)
+        text('Record: ', 470, 520)
+        file1 = open(path + 'scoreboard/1.csv', 'r')
+        file2 = open(path + 'scoreboard/2.csv', 'r')
+        record1 = file1.read().split(',')
+        record2 = file2.read().split(',')
+        print record1
+        print record2
+        r1 = 1000
+        for n in range (1, len(record1)):
+            if int(record1[n]) < r1:
+                r1 = int(record1[n])
+        r2 = 1000
+        for n in range (1, len(record2)):
+            if int(record2[n]) < r2:
+                r2 = int(record2[n])
+        file1.close()
+        file2.close()
+        text(r1, 600, 390)
+        text(r2, 600, 520)
+                    
     def display(self):
         strokeWeight(2)
         stroke(200)
@@ -427,6 +448,12 @@ class Game:
                         c.fuh.append(int(c.faceup))
                         c.p = [pi+1]
                 if len(self.done) == 8:
+                    if self.spade:
+                        file = open(path + 'scoreboard/1.csv', 'a')
+                    else:
+                        file = open(path + 'scoreboard/2.csv', 'a')
+                    file.write(',' + str(self.moves))
+                    file.close()
                     return True
             else:
                 return False
@@ -470,14 +497,14 @@ def draw():
     
 def mouseClicked():
     if not g.gameon:
-        if 400 < mouseX < 550 and 350 < mouseY < 400:
+        if 300 < mouseX < 450 and 350 < mouseY < 400:
             g.__init__(spade = True, win = False, gameon = False)
             g.gameon = True
             g.display()
-        elif 400 < mouseX < 550 and 480 < mouseY < 530:
+        elif 300 < mouseX < 450 and 480 < mouseY < 530:
             g.__init__(spade = False, win = False, gameon = False)
             g.gameon = True
-            g.display()
+            g.display()        
     elif g.gameon and not g.win:
         g.clicked()
     elif g.win:
