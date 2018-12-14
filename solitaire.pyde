@@ -1,27 +1,24 @@
 add_library('minim')
-# sound effect
-# add creepy voices asking 'wanna continue? 100 moves already'
-
-# exit and start a new game
-# winning screen
 
 import os
 import random
 import time
+
 path = os.getcwd() + '/'
 player = Minim(this)
+
 cardwidth = 70
 cardlength = 100
 
 class Card:
     def __init__(self, num, r, spade=True, faceup=False, moving=False):
         self.p = []      # the pile history of the card
-        self.num = num   # the order of it in this pile
+        self.num = num   # the order of it in current pile
         self.r = r       # the rank
         self.spade = spade
         self.faceup = faceup
         self.fuh = []    # keep track of face up history
-        self.moving = moving
+        self.moving = moving    #if it is moving with the mouse
         self.img = loadImage(path + 'images/back.jpg')
         
     def display(self):
@@ -31,28 +28,30 @@ class Card:
             image(self.img, mouseX-cardwidth/2, mouseY-10+self.num*20, cardwidth, cardlength)
     
     def flip(self):
+        # traditional flipping cards
         if not self.faceup:
             self.img = loadImage(path + 'images/' + str(int(self.spade)) + str(self.r) + '.png')
             self.faceup = True
     
     def cover(self):
+        # in case of undo, sometimes a card needs to be unflipped
         if self.faceup:
             self.img = loadImage(path + 'images/back.jpg')
             self.faceup = False  
                
 class Deck(list):
     def __init__(self, spade=True):
-        self.spade = spade
+        self.spade = spade     # whether of not the deck is all spade cards
         self.ranks = []
         
         for i in range(13):
             self.ranks.append(i+1)
         
-        if self.spade:
+        if self.spade:    # all spade cards
             for i in range(8):
                 for r in self.ranks:
                     self.append(Card(0, r, True, False))
-        else:
+        else:      # half spade cards, half heart cards
             for i in range(4):
                 for r in self.ranks:
                     self.append(Card(0, r, True, False))
@@ -67,8 +66,8 @@ class Game:
     def __init__(self, spade = True, win = False, gameon = False):
         self.moves = 0
         self.win = win
-        self.gameon = gameon
-        self.spade = spade
+        self.gameon = gameon      # whether or not it is in the menu
+        self.spade = spade        # whether the game is easy or hard
         self.deck = Deck(self.spade)
         self.deck.shuffle_cards()
         self.mouselist = []
@@ -78,7 +77,8 @@ class Game:
         self.doneimg1 = loadImage(path + 'images/11.png')
         self.doneimg2 = loadImage(path + 'images/01.png')
         self.bgimg = loadImage(path + 'images/bg.jpeg')
-      
+        
+        # append each pile
         self.piles = []
         for i in range(1,5):
             pile = Pile(i)
@@ -102,7 +102,8 @@ class Game:
             pile[4].flip()
             pile[4].fuh[0] = 1
             self.piles.append(pile)    
-
+        
+        # append each addon
         self.addons = []
         for i in range(5):
             addon = Addon(i)
@@ -110,7 +111,7 @@ class Game:
                 addon.append(self.deck.pop())
             self.addons.append(addon)
     
-    def gamestart(self):
+    def gamestart(self):    # the menu
         fill(255)
         textSize(60)
         text('SOLITAIRE', 330, 250)
@@ -125,6 +126,7 @@ class Game:
         textSize(30)
         text('Record: ', 470, 390)
         text('Record: ', 470, 520)
+        # read highest record
         file1 = open(path + 'scoreboard/1.csv', 'r')
         file2 = open(path + 'scoreboard/2.csv', 'r')
         record1 = file1.read().split(',')
@@ -143,6 +145,7 @@ class Game:
         text(r2, 600, 520)
                     
     def display(self):
+        #highlight
         strokeWeight(2)
         stroke(200)
         rect(30, 30, cardwidth, 30)
@@ -157,6 +160,7 @@ class Game:
         text('Hint', 510, 93)
         rect(500, 60, 100, 40)
         
+        # if a pile has no cards, display a rectangle in the card position
         for i in range(10):
             if self.piles[i] == []:
                 stroke(200)
@@ -164,6 +168,7 @@ class Game:
                 strokeWeight(2)
                 rect(30+i*(cardwidth+20), 160, cardwidth, cardlength)
         
+        # if no done, display a rectangle in the position
         if self.done == []:
             rect(120, 30, cardwidth, cardlength)
         else:
@@ -171,22 +176,27 @@ class Game:
             for i in self.done:
                 image(i, 120+cnt*20, 30, cardwidth, cardlength)
                 cnt += 1
-
+        
+        # if no more addons, display a rectangle
         if self.addons == []:
             rect(840, 30, cardwidth, cardlength)
-                
+      
+        # display all the cards in the piles  
         for pile in self.piles:
             if len(pile) != 0:
                 for card in pile:
                     card.display()
-        
+                    
+        # constantly updating what's following the mouse
         if self.mouselist != []:
             for c in self.mouselist:
                 c.display()
-    
+        
+        # display addons
         for addon in self.addons:
             addon.display()
         
+        # highlight cards
         i = (mouseX-30)//90
         if i == 10:
             i = 9
@@ -203,18 +213,21 @@ class Game:
                 strokeWeight(3)
                 rect(30+i*(cardwidth+20), 160+n*20, cardwidth, 20*(len(self.piles[i])-n)+80)
         
+        # highlight menu button
         if 30 < mouseX < 100 and 30 < mouseY < 60:
             noFill()
             strokeWeight(3)
             stroke(0, 0, 100)
             rect(30, 30, cardwidth, 30)
-                
+        
+        # highlight undo button        
         if 30 < mouseX < 100 and 100 < mouseY < 130:
             noFill()
             stroke(0, 0, 100)
             strokeWeight(3)
             rect(30, 100, 70, 30)
         
+        # highlight addons
         if 30 < mouseY < 130 and 910-(len(self.addons)-1)*20-cardwidth < mouseX < 910-(len(self.addons)-1)*20:
             if self.addons != []:
                 noFill()
@@ -222,6 +235,7 @@ class Game:
                 strokeWeight(3)
                 rect(910-(len(self.addons)-1)*20-cardwidth, 30, 70, 100)
         
+        # highlight hint button
         if 500 < mouseX < 600 and 60 < mouseY < 100:
             noFill()
             strokeWeight(3)
@@ -251,10 +265,11 @@ class Game:
             for pi in self.piles:
                 for c in pi:
                     if len(c.p) == 1:
-                        # voice
+                        # if the game just starts or an addon is just distributed, no undo
                         return
             self.moves += 1
-            self.checkmoves()
+            self.checkmoves()    # whether or not play sound
+            # see which cards changed piles in the last move
             for pi in self.piles:
                 updatelist = []
                 for c in pi:
@@ -267,7 +282,8 @@ class Game:
                         self.piles[target-1].remove(c)
                         self.piles[home-1].append(c)
                     break
-                
+           
+            # every card goes back one in pile history   
             for pi in self.piles:
                 cnt = 0
                 for c in pi:
@@ -283,6 +299,7 @@ class Game:
             if 30 < mouseY < 130 and 910-(len(self.addons)-1)*20-cardwidth < mouseX < 910-(len(self.addons)-1)*20:
                 addon = self.addons[len(self.addons)-1]
                 i = 0
+                # distribute one card to every pile
                 for c in addon:
                     self.piles[i].append(c)
                     c.p.append(i+1)
@@ -298,7 +315,7 @@ class Game:
             if self.hinttimes != 0 and self.hinttimes%5 == 0:
                     hint5.rewind()
                     hint5.play()
-            #the first priority is to check the empty
+            #the first priority is to check the empty piles
             hintlist =[] #for empyty pile
             for i in range(10):    
                 if self.piles[i] == []:
@@ -310,9 +327,8 @@ class Game:
                 noFill()
                 strokeWeight(3)
                 rect(30+h*(cardwidth+20), 160, cardwidth, cardlength)
-            # find the card bigger 
-            # randomly generate
             elif hintlist == []:
+                # find the card to attach to 
                 for j in range(10):
                     fpsequence = [] # for the faceup list for every pile
                     for c in self.piles[j]:
@@ -320,7 +336,7 @@ class Game:
                            fpsequence.append(c)
                     checkline = ''
                     checkspade = 0
-                    hintsequence = [] #for unempty pile
+                    hintsequence = [] # for cards in order and with same suit, from bottom up
                     hintsequence.append(fpsequence[len(fpsequence)-1])
                     for c in fpsequence[len(fpsequence)-2::-1]:
                         if c.spade == fpsequence[len(fpsequence)-1].spade and c.r == hintsequence[len(hintsequence)-1].r+1:
@@ -328,15 +344,14 @@ class Game:
                         else:
                             break
                             # return hintsequence[-1].r+1
-                    #check other piles last
+                    # check other piles last
                     for i in range(10):
-                        b = False
+                        b = False    # if we can find a hint, True we double break, False we check addons
                         if self.piles[i][len(self.piles[i])-1].spade == hintsequence[len(hintsequence)-1].spade and self.piles[i][len(self.piles[i])-1].r == hintsequence[len(hintsequence)-1].r+1:
                             frameRate(3)
                             stroke(200,0,0)
                             noFill()
                             strokeWeight(3)
-                            #hintsequence
                             rect(30+j*(cardwidth+20), 160+20*(len(self.piles[j])-len(hintsequence)), cardwidth, 20*(len(hintsequence)-1)+100)
                             stroke(50,0,0)
                             rect(30+i*(cardwidth+20), 160+20*(len(self.piles[i])-1), cardwidth, cardlength)
@@ -344,7 +359,7 @@ class Game:
                             break
                     if b:
                         break
-                #addon 
+                # check addons
                 if not b and self.addons != []:
                     frameRate(3)
                     stroke(200,0,0)
@@ -352,11 +367,13 @@ class Game:
                     strokeWeight(3)
                     rect(910-(len(self.addons)-1)*20-cardwidth, 30, cardwidth, cardlength) 
                 elif not b and self.addons == []:
+                    # no more possible moves, just quit
                     self.hinttimes = 0
                     nohint.rewind()
                     nohint.play() 
     
     def pressed(self):
+        # id which pile mouse's at
         pile = (mouseX-30)//90
         if pile == 10:
             pile = 9
@@ -369,7 +386,9 @@ class Game:
                 cardn = len(home)-1
             sequence = home[cardn:]
             if home[cardn].faceup:
+                # check if the sequence is in order
                 if self.checkMovable(sequence):
+                    # can be moved, move with mouse
                     self.mouselist = []
                     cnt = 0
                     for c in sequence:
@@ -381,6 +400,7 @@ class Game:
         
     def released(self):
         if self.mouselist != []:
+            # id target pile
             pile = (mouseX-30)//90
             if pile == 10:
                 pile = 9
@@ -390,12 +410,16 @@ class Game:
             home = self.piles[self.mouselist[0].p[len(self.mouselist[0].p)-1]-1]
             if mouseY >= 160 + (len(target)-1)*20 and mouseY <= 160 + (len(target)-1)*20 + 100:
                 if self.checkAcceptable(pile, target):
+                    # can accept
                     self.moves += 1
                     self.checkmoves()
+                    # flip the last card from the home pile
                     if home != [] and not home[len(home)-1].faceup:
                         home[len(home)-1].flip()
+                    # append cards to target
                     for c in self.mouselist:
                         target.append(c)
+                    # relabel cards
                     for n in range(len(target)):
                         target[n].num = n
                         target[n].moving = False
@@ -403,6 +427,7 @@ class Game:
                         for c in self.piles[pi-1]:
                             c.p.append(pi)
                             c.fuh.append(int(c.faceup))
+                    # check possible win
                     possiblewin = []
                     for c in target:
                         if c.faceup:
@@ -410,12 +435,12 @@ class Game:
                     if len(possiblewin) >= 13: 
                         pw =  possiblewin[-1:-14:-1]    
                         self.win = self.checkwin(target, pw)
-                else:
+                else:    # not acceptable, move back to home
                     for c in self.mouselist:
                         home.append(c)
                         c.moving = False
                         c.num = len(home)-1
-            else:
+            else:     # release outside the pile zone, move back to home
                  for c in self.mouselist:
                     home.append(c)
                     c.moving = False
@@ -462,14 +487,14 @@ class Game:
             checkline += '.'
             checkspade += int(c.spade)
         if checkline == '1.2.3.4.5.6.7.8.9.10.11.12.13.':
-            if checkspade == 0 or checkspade == 13: 
+            if checkspade == 0 or checkspade == 13:     # either all spade or all heart
                 for c in pw:
                     target.remove(c)
                 if target != [] and not target[len(target)-1].faceup:
                     target[len(target)-1].flip()
-                if checkspade == 0:
+                if checkspade == 0:    # all spade
                     self.done.append(self.doneimg2)
-                else:
+                else:     # all heart
                     self.done.append(self.doneimg1)
                 for pi in range(10):
                     for c in self.piles[pi]:
@@ -487,6 +512,7 @@ class Game:
                 elif len(self.done) == 8:
                     winning.rewind()
                     winning.play()
+                    # write record
                     if self.spade:
                         file = open(path + 'scoreboard/1.csv', 'a')
                     else:
@@ -499,18 +525,13 @@ class Game:
         else:
             return False
                 
-class Addon(list):
+class Addon(list):    # distribute one new card to each pile when clicked
     def __init__(self, order):
         self.order = order
         self.backimg = loadImage(path + 'images/back.jpg')
     
     def display(self):
         image(self.backimg, 910-50-(self.order+1)*20, 30, cardwidth, cardlength)
-        
-    #display each group one at a time
-    def clicked(self, order):
-        for i in range(10):
-            g.piles[i+1].append(self[i])
     
 class Pile(list):
     def __init__(self, order):
@@ -532,7 +553,7 @@ win7 = player.loadFile(path + 'sounds/win7.mp3')
         
 def setup():
     size(940, 800)
-    background(0, 255, 0)
+    background(100)
 
 def draw():
     frameRate(15)
@@ -547,14 +568,14 @@ def draw():
         g.display()
     
 def mouseClicked():
-    if not g.gameon:
-        if 300 < mouseX < 450 and 350 < mouseY < 400:
+    if not g.gameon:   # menu
+        if 300 < mouseX < 450 and 350 < mouseY < 400:      # easy
             g.__init__(spade = True, win = False, gameon = False)
             g.gameon = True
             easywelcome.rewind()
             easywelcome.play()
             g.display()
-        elif 300 < mouseX < 450 and 480 < mouseY < 530:
+        elif 300 < mouseX < 450 and 480 < mouseY < 530:    # hard
             g.__init__(spade = False, win = False, gameon = False)
             g.gameon = True
             hardwelcome.rewind()
