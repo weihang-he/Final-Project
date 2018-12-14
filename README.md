@@ -24,10 +24,9 @@ To make the game more personal, we specifically record voices and use as sound e
 
 
 Note:
-Due to naming error, the Final-Project.pyde does not contain the actual code. 
+Due to naming error, the Final-Project.pyde does not contain the actual code.
 
 Please run the Solitaire.pyde instead.
 
-
-
-![Alt text](relative/path/to/img.jpg?raw=true "gameon.png")
+Below is an image of the acutal game when running:
+<img width="924" alt="gameplay" src="https://user-images.githubusercontent.com/45058646/50028421-18113f80-0009-11e9-98ec-64dc8fd4c69f.png">
