@@ -1,4 +1,4 @@
-#add_library('minim')
+add_library('minim')
 # sound effect
 # add creepy voices asking 'wanna continue? 100 moves already'
 
@@ -9,7 +9,7 @@ import os
 import random
 import time
 path = os.getcwd() + '/'
-#player = Minim(this)
+player = Minim(this)
 cardwidth = 70
 cardlength = 100
 
@@ -73,11 +73,12 @@ class Game:
         self.deck.shuffle_cards()
         self.mouselist = []
         self.done = []
+        self.undotimes = 0
+        self.hinttimes = 0
         self.doneimg1 = loadImage(path + 'images/11.png')
         self.doneimg2 = loadImage(path + 'images/01.png')
         self.bgimg = loadImage(path + 'images/bg.jpeg')
-        #self.easywelcome = player.loadFile(path + 'sounds/easywelcome.mp3')
-        
+      
         self.piles = []
         for i in range(1,5):
             pile = Pile(i)
@@ -155,10 +156,6 @@ class Game:
         textSize(35)
         text('Hint', 510, 93)
         rect(500, 60, 100, 40)
-        
-        #if self.spade:
-        #    self.easywelcome.rewind()
-        #    self.easywelcome.play()
         
         for i in range(10):
             if self.piles[i] == []:
@@ -239,17 +236,25 @@ class Game:
         
     def checkexit(self):
         if 30 < mouseX < 100 and 30 < mouseY < 60:
+            menu.rewind()
+            menu.play()
             self.gameon = False
             self.gamestart()
     
     def checkundo(self):    
         if 30 < mouseX < 100 and 100 < mouseY < 130:
+            self.undotimes += 1
+            if self.undotimes != 0 and self.moves != 70 and self.moves != 100 and self.undotimes%5 == 0:
+                undo5.rewind()
+                undo5.play()
+            
             for pi in self.piles:
                 for c in pi:
                     if len(c.p) == 1:
                         # voice
                         return
             self.moves += 1
+            self.checkmoves()
             for pi in self.piles:
                 updatelist = []
                 for c in pi:
@@ -289,6 +294,10 @@ class Game:
                 
     def checkhint(self):
         if 500 < mouseX < 600 and 60 < mouseY < 100:
+            self.hinttimes += 1
+            if self.hinttimes != 0 and self.hinttimes%5 == 0:
+                    hint5.rewind()
+                    hint5.play()
             #the first priority is to check the empty
             hintlist =[] #for empyty pile
             for i in range(10):    
@@ -342,6 +351,10 @@ class Game:
                     noFill()
                     strokeWeight(3)
                     rect(910-(len(self.addons)-1)*20-cardwidth, 30, cardwidth, cardlength) 
+                elif not b and self.addons == []:
+                    self.hinttimes = 0
+                    nohint.rewind()
+                    nohint.play() 
     
     def pressed(self):
         pile = (mouseX-30)//90
@@ -378,6 +391,7 @@ class Game:
             if mouseY >= 160 + (len(target)-1)*20 and mouseY <= 160 + (len(target)-1)*20 + 100:
                 if self.checkAcceptable(pile, target):
                     self.moves += 1
+                    self.checkmoves()
                     if home != [] and not home[len(home)-1].faceup:
                         home[len(home)-1].flip()
                     for c in self.mouselist:
@@ -431,7 +445,15 @@ class Game:
                 return True
             else:
                 return False        
-                
+    
+    def checkmoves(self):
+        if self.moves == 70:
+            move70.rewind()
+            move70.play()
+        elif self.moves == 100:
+            move100.rewind()
+            move100.play()
+                            
     def checkwin(self, target, pw):
         checkline = ''
         checkspade = 0
@@ -453,7 +475,18 @@ class Game:
                     for c in self.piles[pi]:
                         c.fuh.append(int(c.faceup))
                         c.p = [pi+1]
-                if len(self.done) == 8:
+                if len(self.done) == 1:
+                    win1.rewind()
+                    win1.play()
+                elif len(self.done) == 4:
+                    win4.rewind()
+                    win4.play()
+                elif len(self.done) == 7:
+                    win7.rewind()
+                    win7.play()
+                elif len(self.done) == 8:
+                    winning.rewind()
+                    winning.play()
                     if self.spade:
                         file = open(path + 'scoreboard/1.csv', 'a')
                     else:
@@ -484,6 +517,18 @@ class Pile(list):
         self.order = order
             
 g = Game()
+easywelcome = player.loadFile(path + 'sounds/easywelcome.mp3')
+hardwelcome = player.loadFile(path + 'sounds/hardwelcome.mp3')
+move70 = player.loadFile(path + 'sounds/move70.mp3')
+move100 = player.loadFile(path + 'sounds/move100.mp3')
+hint5 = player.loadFile(path + 'sounds/hint5.mp3')
+nohint = player.loadFile(path + 'sounds/nohint.mp3')
+menu = player.loadFile(path + 'sounds/menu.mp3')
+undo5 = player.loadFile(path + 'sounds/undo5.mp3')
+winning = player.loadFile(path + 'sounds/winning.mp3')
+win1 = player.loadFile(path + 'sounds/win1.mp3')
+win4 = player.loadFile(path + 'sounds/win4.mp3')
+win7 = player.loadFile(path + 'sounds/win7.mp3')
         
 def setup():
     size(940, 800)
@@ -506,15 +551,19 @@ def mouseClicked():
         if 300 < mouseX < 450 and 350 < mouseY < 400:
             g.__init__(spade = True, win = False, gameon = False)
             g.gameon = True
+            easywelcome.rewind()
+            easywelcome.play()
             g.display()
         elif 300 < mouseX < 450 and 480 < mouseY < 530:
             g.__init__(spade = False, win = False, gameon = False)
             g.gameon = True
+            hardwelcome.rewind()
+            hardwelcome.play()
             g.display()        
     elif g.gameon and not g.win:
         g.clicked()
     elif g.win:
-        time.sleep(5)
+        time.sleep(7)
         g.win = False
         g.gameon = False
         g.gamestart()
