@@ -30,3 +30,4 @@ Please run the Solitaire.pyde instead.
 
 
 
+![Alt text](relative/path/to/img.jpg?raw=true "gameon.png")
