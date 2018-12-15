@@ -198,7 +198,7 @@ class Game:
         
         # highlight cards
         i = (mouseX-30)//90
-        if i == 10:
+        if i >= 9:
             i = 9
         elif i == -1:
             i = 0
@@ -448,13 +448,13 @@ class Game:
             self.mouselist = []
     
     def checkMovable(self, sequence):
-        checkline = ''
+        checkline = '.'
         checkspade = 0
         for c in sequence:
             checkline += (str(c.r))
             checkline += '.'
             checkspade += int(c.spade)
-        if checkline in '13.12.11.10.9.8.7.6.5.4.3.2.1.':
+        if checkline in '.13.12.11.10.9.8.7.6.5.4.3.2.1.':
             if checkspade == 0 or checkspade == len(sequence): 
                 return True
             else:
